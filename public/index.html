@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Watch — Dream Job Watcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EFEEE8;
+    --ink: #23261F;
+    --ink-soft: #565A4D;
+    --line: #C9C6B8;
+    --moss: #55603C;
+    --moss-dim: #8A9270;
+    --rust: #A2472C;
+    --card: #F8F7F2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Source Sans 3', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header.masthead {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .masthead h1 {
+    font-family: 'Fraunces', serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .masthead .sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .status-line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--moss); display: inline-block; position: relative; }
+  .dot.idle { background: var(--moss-dim); }
+  .dot.active::after {
+    content: '';
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 1px solid var(--moss);
+    animation: pulse 1.4s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.6); opacity: 0.9; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  #matchCount { transition: opacity 0.3s ease; }
+  button.primary {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 11px 18px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.15s ease, transform 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  button.primary:hover:not(:disabled) { background: #3a3e30; transform: translateY(-1px); }
+  button.primary:active:not(:disabled) { transform: translateY(0); }
+  button.primary:disabled { background: var(--line); cursor: default; }
+  .spinner {
+    width: 11px; height: 11px;
+    border: 2px solid rgba(239,238,232,0.35);
+    border-top-color: var(--paper);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  button.primary.loading .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .log-entry {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--moss-dim);
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    position: relative;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: entryIn 0.45s ease forwards;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .log-entry:hover { box-shadow: 0 4px 16px rgba(35,38,31,0.08); }
+  @keyframes entryIn { to { opacity: 1; transform: translateY(0); } }
+  .log-entry.approved { border-left-color: var(--moss); }
+  .log-entry.dismissed { opacity: 0.45; transform: none; animation: none; }
+
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .entry-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 19px;
+    line-height: 1.25;
+  }
+  .entry-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    margin-top: 4px;
+    transition: color 0.2s ease;
+  }
+  .log-entry:hover .entry-meta { color: var(--moss); }
+  .entry-company { color: var(--ink-soft); font-size: 14.5px; margin-bottom: 10px; }
+  .reasons {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--moss);
+    margin-bottom: 12px;
+  }
+  .reasons span { color: var(--ink-soft); }
+
+  details summary {
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .draft {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 14px 16px;
+    font-size: 14px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    margin: 8px 0 14px;
+  }
+
+  .entry-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .entry-actions a, .entry-actions button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding: 7px 12px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .entry-actions .approve:hover { border-color: var(--moss); color: var(--moss); }
+  .entry-actions .dismiss:hover { border-color: var(--rust); color: var(--rust); }
+  .entry-actions .view:hover { border-color: var(--ink); }
+
+  .empty {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 64px 0;
+    border: 1px dashed var(--line);
+  }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+  .tab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 14px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--moss); }
+
+  /* ---------- new badge ---------- */
+  .new-badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--moss);
+    color: var(--paper);
+    padding: 2px 6px;
+    margin-left: 8px;
+    vertical-align: middle;
+    border-radius: 2px;
+  }
+
+  /* ---------- CV / profile builder panel ---------- */
+  button.ghost-btn {
+    background: transparent !important;
+    color: var(--ink) !important;
+    border: 1px solid var(--line) !important;
+  }
+  button.ghost-btn:hover:not(:disabled) { border-color: var(--moss) !important; color: var(--moss) !important; }
+  .cv-panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .cv-hint { font-size: 13px; color: var(--ink-soft); margin: 0 0 12px; line-height: 1.5; }
+  #resumeInput {
+    width: 100%;
+    min-height: 160px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  .cv-actions { display: flex; gap: 10px; margin-top: 12px; }
+  .ghost-btn-plain {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 10px 16px;
+    cursor: pointer;
+    color: var(--ink-soft);
+  }
+  .ghost-btn-plain:hover { color: var(--ink); }
+  .extract-group { margin-top: 16px; }
+  .extract-group h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+  }
+  .skill-chip {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 5px 10px;
+    margin: 0 6px 6px 0;
+  }
+  .skill-chip .count { color: var(--ink-soft); }
+
+  /* ---------- CV input mode tabs + file dropzone ---------- */
+  .cv-input-tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .cv-input-tab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 9px 12px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .cv-input-tab:hover { color: var(--ink); }
+  .cv-input-tab.active { color: var(--ink); border-bottom-color: var(--moss); }
+
+  .cv-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 140px;
+    border: 1px dashed var(--line);
+    background: var(--paper);
+    cursor: pointer;
+    text-align: center;
+    padding: 20px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .cv-dropzone:hover, .cv-dropzone.dragover { border-color: var(--moss); background: var(--card); }
+  .cv-dropzone span#cvDropzoneText { font-size: 14px; color: var(--ink); }
+  .cv-dropzone-hint { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); }
+
+  footer.note {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  /* ---------- Ask Lisa: embedded AI teammate widget ---------- */
+  #askLisaBtn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 900;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 13px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    box-shadow: 0 6px 20px rgba(35,38,31,0.25);
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  #askLisaBtn:hover { background: #3a3e30; transform: translateY(-1px); }
+  #askLisaBtn .pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #6FCF97;
+    position: relative;
+  }
+  #askLisaBtn .pulse-dot::after {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    border: 1px solid #6FCF97; animation: askPulse 1.6s ease-out infinite;
+  }
+  @keyframes askPulse { 0% { transform: scale(0.6); opacity: 0.9; } 100% { transform: scale(2.4); opacity: 0; } }
+
+  #lisaOverlay {
+    position: fixed; inset: 0; z-index: 898;
+    background: rgba(35,38,31,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  #lisaOverlay.open { display: flex; }
+  #lisaOverlay.visible { opacity: 1; }
+  #lisaPanel {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.97);
+    transition: transform 0.25s ease;
+  }
+  #lisaOverlay.visible #lisaPanel { transform: scale(1); }
+  #lisaPanel .lisa-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    background: var(--paper);
+    flex-shrink: 0;
+  }
+  #lisaPanel .lisa-head button {
+    background: none; border: none; color: var(--ink-soft);
+    font-size: 16px; cursor: pointer; line-height: 1;
+  }
+  #lisaPanel .lisa-head button:hover { color: var(--ink); }
+  #lisaPanel iframe { flex: 1; border: none; width: 100%; height: 100%; }
+
+  @media (max-width: 480px) {
+    #askLisaBtn { right: 16px; bottom: 16px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="masthead">
+      <div>
+        <h1>The Watch</h1>
+        <div class="sub">a loop that reads job boards so you don't have to</div>
+      </div>
+      <div class="status-line" id="statusLine">
+        <span class="dot idle" id="statusDot"></span>
+        <span id="statusText">checking last run…</span>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="status-line" id="matchCount"></div>
+      <div style="display:flex; gap:10px;">
+        <button class="primary ghost-btn" id="buildProfileBtn">Build profile from CV</button>
+        <button class="primary" id="runBtn">Scan now</button>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-filter="all">All</button>
+      <button class="tab" data-filter="pending_review">Pending</button>
+      <button class="tab" data-filter="approved">Approved</button>
+      <button class="tab" data-filter="dismissed">Dismissed</button>
+    </div>
+
+    <div class="cv-panel" id="cvPanel" style="display:none;">
+      <div class="cv-panel-inner">
+        <p class="cv-hint">Add your resume/CV below — paste the text or upload a file. The Profile Builder Agent extracts real skills it finds repeated (must-have) or mentioned once (nice-to-have) — nothing is saved until you review and confirm.</p>
+
+        <div class="cv-input-tabs">
+          <button class="cv-input-tab active" data-mode="paste">Paste text</button>
+          <button class="cv-input-tab" data-mode="upload">Upload file</button>
+        </div>
+
+        <div id="cvPasteMode">
+          <textarea id="resumeInput" placeholder="Paste your resume text here..."></textarea>
+        </div>
+
+        <div id="cvUploadMode" style="display:none;">
+          <label class="cv-dropzone" id="cvDropzone" for="resumeFileInput">
+            <span id="cvDropzoneText">Drop your resume here, or click to choose a file</span>
+            <span class="cv-dropzone-hint">Supports PDF, DOCX, or TXT — up to 5MB</span>
+          </label>
+          <input type="file" id="resumeFileInput" accept=".pdf,.docx,.txt" style="display:none;" />
+        </div>
+
+        <div class="cv-actions">
+          <button class="primary" id="extractBtn">Extract skills</button>
+          <button class="ghost-btn-plain" id="cancelCvBtn">Cancel</button>
+        </div>
+        <div id="extractResult"></div>
+      </div>
+    </div>
+
+    <div id="entries"></div>
+
+    <footer class="note">
+      Sources: RemoteOK, Arbeitnow, and any Greenhouse boards you've listed in config.json — all public, free, no key required.
+      Nothing here is ever sent or applied on your behalf. Approve a note and the sending is on you.
+    </footer>
+  </div>
+
+  <!-- Ask Lisa: embedded AI teammate, knows this project's real architecture -->
+  <button id="askLisaBtn" aria-label="Ask Lisa about this project" aria-expanded="false" aria-controls="lisaPanel">
+    <span class="pulse-dot"></span> Ask Lisa
+  </button>
+  <div id="lisaOverlay">
+    <div id="lisaPanel" role="dialog" aria-label="Lisa, AI teammate">
+      <div class="lisa-head">
+        <span>Lisa — ask about this project</span>
+        <button id="lisaCloseBtn" aria-label="Close">×</button>
+      </div>
+      <div id="lisaIframeMount"></div>
+      <div id="lisaStuckNotice" style="display:none; padding:14px 16px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); border-top:1px solid var(--line); background:var(--paper);">
+        Still connecting after 15s — this is usually a session limit or connection issue on TruGen's side, not your setup. Try closing and reopening, or check your TruGen dashboard for stuck sessions.
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  var LISA_URL = "https://app.trugen.ai/embed/e0482796-a2b9-4a8e-950f-b0c5044fecaa";
+  var btn = document.getElementById("askLisaBtn");
+  var overlay = document.getElementById("lisaOverlay");
+  var closeBtn = document.getElementById("lisaCloseBtn");
+  var mount = document.getElementById("lisaIframeMount");
+  var loaded = false;
+
+  function loadIframeOnce() {
+    if (loaded) return;
+    var iframe = document.createElement("iframe");
+    iframe.src = LISA_URL;
+    iframe.title = "Lisa — AI teammate for The Watch";
+    iframe.allow = "camera; microphone; fullscreen; display-capture";
+    iframe.loading = "lazy";
+    mount.appendChild(iframe);
+    loaded = true;
+
+    // If it's still showing the "connecting" state after 15s, that's very
+    // likely a stuck session on TruGen's side (e.g. a concurrent-session
+    // limit), not a slow network. Surface that plainly instead of leaving
+    // someone staring at a silent, empty-looking panel.
+    setTimeout(function () {
+      var notice = document.getElementById("lisaStuckNotice");
+      if (notice) notice.style.display = "block";
+    }, 15000);
+  }
+
+  function openLisa() {
+    overlay.classList.add("open");
+    loadIframeOnce();
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { overlay.classList.add("visible"); });
+    });
+    btn.setAttribute("aria-expanded", "true");
+  }
+  function closeLisa() {
+    overlay.classList.remove("visible");
+    btn.setAttribute("aria-expanded", "false");
+    setTimeout(function () { overlay.classList.remove("open"); }, 250);
+  }
+
+  btn.addEventListener("click", function () {
+    if (overlay.classList.contains("open")) closeLisa(); else openLisa();
+  });
+  closeBtn.addEventListener("click", closeLisa);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) closeLisa();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && overlay.classList.contains("open")) closeLisa();
+  });
+})();
+</script>
+
+<script>
+// If the server requires an API key, the user sets it once and it's kept in
+// this browser's localStorage — never sent anywhere except this same origin.
+function getApiKey() {
+  return localStorage.getItem("dreamJobWatcherApiKey") || "";
+}
+
+async function fetchJSON(url, opts = {}) {
+  const key = getApiKey();
+  const headers = { ...(opts.headers || {}) };
+  if (key) headers["x-api-key"] = key;
+  const res = await fetch(url, { ...opts, headers });
+  if (res.status === 401) {
+    const entered = prompt("This server requires an API key. Enter it:");
+    if (entered) {
+      localStorage.setItem("dreamJobWatcherApiKey", entered);
+      return fetchJSON(url, opts); // retry once with the new key
+    }
+  }
+  return res.json();
+}
+
+function timeAgo(iso) {
+  if (!iso) return "never";
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return mins + "m ago";
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + "h ago";
+  return Math.floor(hrs / 24) + "d ago";
+}
+
+function escapeHTML(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+let currentFilter = "all";
+let lastKnownScanTime = null; // used to badge matches from the most recent scan
+
+function renderEntry(job, index) {
+  const reasons = (job.reasons || []).filter(r => !r.startsWith("excluded")).join(" · ");
+  const safeUrl = job.url ? escapeHTML(job.url) : "#";
+  const linkAttrs = job.url ? `href="${safeUrl}" target="_blank" rel="noopener"` : `href="#" aria-disabled="true" style="opacity:0.4;pointer-events:none"`;
+  const delay = Math.min(index * 45, 500);
+  const isNew = job.scannedAt && lastKnownScanTime && job.scannedAt === lastKnownScanTime;
+  return `
+    <div class="log-entry ${escapeHTML(job.status || '')}" data-id="${escapeHTML(job.id)}" data-status="${escapeHTML(job.status || 'pending_review')}" style="animation-delay:${delay}ms">
+      <div class="entry-head">
+        <div class="entry-title">${escapeHTML(job.title)}${isNew ? '<span class="new-badge">new</span>' : ''}</div>
+        <div class="entry-meta">score ${escapeHTML(job.score)} · ${escapeHTML(job.source)}</div>
+      </div>
+      <div class="entry-company">${escapeHTML(job.company)} — ${escapeHTML(job.location)}</div>
+      ${reasons ? `<div class="reasons">${escapeHTML(reasons)}</div>` : ''}
+      <details>
+        <summary>drafted note</summary>
+        <div class="draft">${escapeHTML(job.draftNote)}</div>
+      </details>
+      <div class="entry-actions">
+        <a class="view" ${linkAttrs}>view posting</a>
+        <button class="approve" onclick="setStatus('${escapeHTML(job.id)}','approved')">mark approved</button>
+        <button class="dismiss" onclick="setStatus('${escapeHTML(job.id)}','dismissed')">dismiss</button>
+      </div>
+    </div>
+  `;
+}
+
+async function setStatus(id, status) {
+  await fetchJSON(`/api/matches/${id}/status`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  loadMatches();
+}
+
+let allMatchesCache = [];
+
+function applyFilterAndRender() {
+  const container = document.getElementById("entries");
+  const filtered = currentFilter === "all"
+    ? allMatchesCache
+    : allMatchesCache.filter(m => (m.status || "pending_review") === currentFilter);
+
+  if (!allMatchesCache.length) {
+    container.innerHTML = `<div class="empty">No entries yet. Run a scan to let the loop go look.</div>`;
+    return;
+  }
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty">Nothing in this view yet.</div>`;
+    return;
+  }
+  container.innerHTML = filtered.map((job, i) => renderEntry(job, i)).join("");
+}
+
+async function loadMatches() {
+  const matches = await fetchJSON("/api/matches");
+  allMatchesCache = matches;
+  const active = matches.filter(m => m.status !== "dismissed");
+  document.getElementById("matchCount").textContent =
+    matches.length ? `${active.length} in the queue` : "";
+  applyFilterAndRender();
+}
+
+document.querySelectorAll(".tab").forEach(tabEl => {
+  tabEl.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tabEl.classList.add("active");
+    currentFilter = tabEl.dataset.filter;
+    applyFilterAndRender();
+  });
+});
+
+// ---- CV / Profile Builder Agent flow ----
+const cvPanel = document.getElementById("cvPanel");
+document.getElementById("buildProfileBtn").addEventListener("click", () => {
+  cvPanel.style.display = cvPanel.style.display === "none" ? "block" : "none";
+});
+document.getElementById("cancelCvBtn").addEventListener("click", () => {
+  cvPanel.style.display = "none";
+  document.getElementById("extractResult").innerHTML = "";
+});
+
+// Input mode tabs: paste text vs upload file
+let cvInputMode = "paste";
+let selectedFile = null;
+document.querySelectorAll(".cv-input-tab").forEach(tabEl => {
+  tabEl.addEventListener("click", () => {
+    document.querySelectorAll(".cv-input-tab").forEach(t => t.classList.remove("active"));
+    tabEl.classList.add("active");
+    cvInputMode = tabEl.dataset.mode;
+    document.getElementById("cvPasteMode").style.display = cvInputMode === "paste" ? "block" : "none";
+    document.getElementById("cvUploadMode").style.display = cvInputMode === "upload" ? "block" : "none";
+  });
+});
+
+// File selection: click-to-choose and drag-and-drop
+const dropzone = document.getElementById("cvDropzone");
+const fileInput = document.getElementById("resumeFileInput");
+function setSelectedFile(file) {
+  selectedFile = file;
+  document.getElementById("cvDropzoneText").textContent = file
+    ? `Selected: ${file.name}`
+    : "Drop your resume here, or click to choose a file";
+}
+fileInput.addEventListener("change", () => setSelectedFile(fileInput.files[0] || null));
+dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("dragover"); });
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropzone.classList.remove("dragover");
+  const file = e.dataTransfer.files[0];
+  if (file) { fileInput.files = e.dataTransfer.files; setSelectedFile(file); }
+});
+
+// Shared rendering for extraction results, used by both paste and upload paths
+function renderExtractionResult(result, resultEl) {
+  if (!result.ok) {
+    resultEl.innerHTML = `<p class="cv-hint">${escapeHTML(result.error || "Extraction failed.")}</p>`;
+    return;
+  }
+  const mustHaveChips = result.mustHave.map(s => `<span class="skill-chip">${escapeHTML(s)} <span class="count">×${result.termCounts[s]}</span></span>`).join("");
+  const niceToHaveChips = result.niceToHave.map(s => `<span class="skill-chip">${escapeHTML(s)} <span class="count">×${result.termCounts[s]}</span></span>`).join("");
+  resultEl.innerHTML = `
+    <div class="extract-group">
+      <h4>Must-have (repeated 2+ times in your resume)</h4>
+      ${mustHaveChips || '<span class="cv-hint">None found — try adding more detail.</span>'}
+    </div>
+    <div class="extract-group">
+      <h4>Nice-to-have (mentioned once)</h4>
+      ${niceToHaveChips || '<span class="cv-hint">None found.</span>'}
+    </div>
+    <div class="cv-actions">
+      <button class="primary" id="confirmSaveBtn">Save to config</button>
+    </div>
+    <p class="cv-hint" style="margin-top:8px;">Review the lists above before saving — this replaces your current keyword lists.</p>
+  `;
+  document.getElementById("confirmSaveBtn").addEventListener("click", async () => {
+    const saveResult = await fetchJSON("/api/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mustHaveKeywords: result.mustHave, niceToHaveKeywords: result.niceToHave }),
+    });
+    resultEl.innerHTML += saveResult.ok
+      ? `<p class="cv-hint">Saved. Your next scan will use these keywords.</p>`
+      : `<p class="cv-hint">Save failed: ${escapeHTML(JSON.stringify(saveResult.errors || saveResult.error))}</p>`;
+  });
+}
+
+document.getElementById("extractBtn").addEventListener("click", async () => {
+  const resultEl = document.getElementById("extractResult");
+  resultEl.innerHTML = `<p class="cv-hint">Extracting…</p>`;
+
+  if (cvInputMode === "upload") {
+    if (!selectedFile) {
+      resultEl.innerHTML = `<p class="cv-hint">Choose a file first.</p>`;
+      return;
+    }
+    async function attemptUpload() {
+      const formData = new FormData();
+      formData.append("resumeFile", selectedFile);
+      const key = getApiKey();
+      const headers = key ? { "x-api-key": key } : {};
+      const res = await fetch("/api/build-profile-file", { method: "POST", headers, body: formData });
+      if (res.status === 401) {
+        const entered = prompt("This server requires an API key. Enter it:");
+        if (entered) {
+          localStorage.setItem("dreamJobWatcherApiKey", entered);
+          return attemptUpload(); // retry once with the new key
+        }
+      }
+      return res.json();
+    }
+    try {
+      const result = await attemptUpload();
+      renderExtractionResult(result, resultEl);
+    } catch (e) {
+      resultEl.innerHTML = `<p class="cv-hint">Upload failed: ${escapeHTML(e.message)}</p>`;
+    }
+    return;
+  }
+
+  const resumeText = document.getElementById("resumeInput").value;
+  const result = await fetchJSON("/api/build-profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ resumeText }),
+  });
+  renderExtractionResult(result, resultEl);
+});
+
+async function loadStatus() {
+  const status = await fetchJSON("/api/status");
+  lastKnownScanTime = status.lastRun || null;
+  document.getElementById("statusText").textContent =
+    status.lastRun ? `last scan ${timeAgo(status.lastRun)} · ${status.runCount} scans total` : "never scanned";
+  document.getElementById("statusDot").className = status.lastRun ? "dot" : "dot idle";
+}
+
+document.getElementById("runBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("runBtn");
+  const dot = document.getElementById("statusDot");
+  btn.disabled = true;
+  btn.classList.add("loading");
+  btn.innerHTML = `<span class="spinner"></span> Scanning…`;
+  dot.classList.add("active");
+  try {
+    const key = getApiKey();
+    const res = await fetch("/api/run-now", {
+      method: "POST",
+      headers: key ? { "x-api-key": key } : {},
+    });
+    const result = await res.json();
+    if (res.status === 401) {
+      btn.innerHTML = `Needs API key`;
+    } else if (res.status === 409) {
+      btn.innerHTML = `Already scanning…`;
+    } else if (res.status === 429) {
+      btn.innerHTML = `Slow down — rate limited`;
+    } else if (!result.ok) {
+      btn.innerHTML = `Scan failed`;
+    } else {
+      btn.innerHTML = `Found ${result.newMatches ?? 0} new`;
+    }
+  } catch (e) {
+    btn.innerHTML = `Scan failed`;
+  }
+  dot.classList.remove("active");
+  await loadStatus();
+  await loadMatches();
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    btn.textContent = "Scan now";
+  }, 1800);
+});
+
+(async () => {
+  await loadStatus();
+  await loadMatches();
+})();
+</script>
+</body>
+</html>
