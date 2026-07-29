@@ -1,0 +1,33 @@
+name: CI — run test suite
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Audit dependencies for known vulnerabilities
+        run: npm audit --audit-level=high
+
+      - name: Syntax-check every JS file
+        run: |
+          for f in $(find . -name "*.js" -not -path "*/node_modules/*"); do
+            node --check "$f" || exit 1
+          done
+
+      - name: Run test suite
+        run: npm test
+
+      - name: Run load test (10k synthetic jobs)
+        run: npm run test:load
