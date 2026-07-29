@@ -1,0 +1,262 @@
+<svg width="1440" height="1780" viewBox="0 0 1440 1780" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>The Watch — system architecture</title>
+<desc>End-to-end architecture of the Dream Job Watcher loop engineering system: triggers, the five-agent loop, the human gatekeeper, delivery surfaces, and free infrastructure.</desc>
+<defs>
+  <style>
+    text { font-family: 'IBM Plex Mono', 'Courier New', monospace; }
+    .serif { font-family: 'Fraunces', Georgia, serif; }
+  </style>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#565A4D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arrow-brass" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#8A6A10" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arrow-moss" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#55603C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<rect x="0" y="0" width="1440" height="1780" fill="#EFEEE8"/>
+
+<!-- ===================== TITLE ===================== -->
+<text class="serif" x="60" y="64" font-size="34" font-weight="600" fill="#23261F">The Watch — system architecture</text>
+<text x="60" y="90" font-size="12.5" letter-spacing="1" fill="#565A4D">LOOP ENGINEERING · DREAM JOB WATCHER · END TO END, $0 INFRASTRUCTURE</text>
+<line x1="60" y1="108" x2="1380" y2="108" stroke="#C9C6B8" stroke-width="1"/>
+
+<!-- ===================== TRIGGERS ROW ===================== -->
+<text x="60" y="148" font-size="12" letter-spacing="1.5" fill="#8A6A10" font-weight="500">01 · TRIGGERS</text>
+
+<g>
+  <rect x="60" y="162" width="240" height="72" rx="4" fill="#F8F7F2" stroke="#C9C6B8" stroke-width="1"/>
+  <text x="80" y="192" font-size="15" fill="#23261F" font-weight="500">Scan now</text>
+  <text x="80" y="212" font-size="11.5" fill="#565A4D">Manual — dashboard button</text>
+</g>
+<g>
+  <rect x="330" y="162" width="240" height="72" rx="4" fill="#F8F7F2" stroke="#C9C6B8" stroke-width="1"/>
+  <text x="350" y="192" font-size="15" fill="#23261F" font-weight="500">Daily cron · 8am</text>
+  <text x="350" y="212" font-size="11.5" fill="#565A4D">node-cron, in-process</text>
+</g>
+<g>
+  <rect x="600" y="162" width="280" height="72" rx="4" fill="#F8F7F2" stroke="#C9A227" stroke-width="1.5"/>
+  <text x="620" y="192" font-size="15" fill="#23261F" font-weight="500">GitHub Actions · daily</text>
+  <text x="620" y="212" font-size="11.5" fill="#8A6A10">Free scheduling, zero server upkeep</text>
+</g>
+
+<line x1="180" y1="234" x2="180" y2="270" stroke="#565A4D" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="450" y1="234" x2="450" y2="270" stroke="#565A4D" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="740" y1="234" x2="740" y2="270" stroke="#8A6A10" stroke-width="1" marker-end="url(#arrow-brass)"/>
+
+<!-- ===================== EXTERNAL DATA SOURCES (left column) ===================== -->
+<text x="60" y="330" font-size="12" letter-spacing="1.5" fill="#8A6A10" font-weight="500">FREE, NO-KEY APIS</text>
+<g>
+  <rect x="60" y="346" width="200" height="52" rx="4" fill="#F8F7F2" stroke="#C9C6B8"/>
+  <text x="78" y="378" font-size="13" fill="#23261F">RemoteOK API</text>
+</g>
+<g>
+  <rect x="60" y="410" width="200" height="52" rx="4" fill="#F8F7F2" stroke="#C9C6B8"/>
+  <text x="78" y="442" font-size="13" fill="#23261F">Arbeitnow API</text>
+</g>
+<g>
+  <rect x="60" y="474" width="200" height="52" rx="4" fill="#F8F7F2" stroke="#C9C6B8"/>
+  <text x="78" y="500" font-size="13" fill="#23261F">Greenhouse boards</text>
+  <text x="78" y="516" font-size="10.5" fill="#565A4D">(optional, per company)</text>
+</g>
+<line x1="260" y1="372" x2="330" y2="372" stroke="#565A4D" stroke-width="1"/>
+<line x1="260" y1="436" x2="330" y2="436" stroke="#565A4D" stroke-width="1"/>
+<line x1="260" y1="500" x2="330" y2="500" stroke="#565A4D" stroke-width="1"/>
+<path d="M330 372 L330 436 L330 500" fill="none" stroke="#565A4D" stroke-width="1"/>
+<line x1="330" y1="436" x2="360" y2="436" stroke="#565A4D" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- ===================== THE LOOP CONTAINER ===================== -->
+<rect x="360" y="286" width="1020" height="640" rx="16" fill="none" stroke="#8A9270" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text class="serif" x="390" y="322" font-size="19" font-weight="500" fill="#23261F">The loop — five agents, one gate</text>
+<text x="390" y="342" font-size="11.5" fill="#565A4D">Runs on every trigger, top to bottom, fully automated until the last step</text>
+
+<!-- Agent 1: Scanner -->
+<g>
+  <circle cx="420" cy="420" r="14" fill="#55603C"/>
+  <text x="420" y="425" font-size="12" fill="#EFEEE8" text-anchor="middle" font-weight="500">1</text>
+  <rect x="450" y="392" width="230" height="56" rx="4" fill="#F8F7F2" stroke="#8A9270"/>
+  <text x="470" y="416" font-size="14" fill="#23261F" font-weight="500">Scanner agent</text>
+  <text x="470" y="434" font-size="11" fill="#565A4D">Fetches live postings</text>
+</g>
+<line x1="565" y1="448" x2="565" y2="480" stroke="#55603C" stroke-width="1" marker-end="url(#arrow-moss)"/>
+
+<!-- Agent 2: Memory -->
+<g>
+  <circle cx="420" cy="508" r="14" fill="#55603C"/>
+  <text x="420" y="513" font-size="12" fill="#EFEEE8" text-anchor="middle" font-weight="500">2</text>
+  <rect x="450" y="480" width="230" height="56" rx="4" fill="#F8F7F2" stroke="#8A9270"/>
+  <text x="470" y="504" font-size="14" fill="#23261F" font-weight="500">Memory agent</text>
+  <text x="470" y="522" font-size="11" fill="#565A4D">Drops anything already seen</text>
+</g>
+<line x1="565" y1="536" x2="565" y2="568" stroke="#55603C" stroke-width="1" marker-end="url(#arrow-moss)"/>
+
+<!-- Agent 3: Fit -->
+<g>
+  <circle cx="420" cy="596" r="14" fill="#55603C"/>
+  <text x="420" y="601" font-size="12" fill="#EFEEE8" text-anchor="middle" font-weight="500">3</text>
+  <rect x="450" y="568" width="230" height="56" rx="4" fill="#F8F7F2" stroke="#8A9270"/>
+  <text x="470" y="592" font-size="14" fill="#23261F" font-weight="500">Fit agent</text>
+  <text x="470" y="610" font-size="11" fill="#565A4D">Keywords + TF-IDF similarity</text>
+</g>
+<line x1="565" y1="624" x2="565" y2="656" stroke="#55603C" stroke-width="1" marker-end="url(#arrow-moss)"/>
+
+<!-- Agent 4: Drafting -->
+<g>
+  <circle cx="420" cy="684" r="14" fill="#55603C"/>
+  <text x="420" y="689" font-size="12" fill="#EFEEE8" text-anchor="middle" font-weight="500">4</text>
+  <rect x="450" y="656" width="230" height="56" rx="4" fill="#F8F7F2" stroke="#8A9270"/>
+  <text x="470" y="680" font-size="14" fill="#23261F" font-weight="500">Drafting agent</text>
+  <text x="470" y="698" font-size="11" fill="#565A4D">Writes a tailored note</text>
+</g>
+<line x1="565" y1="712" x2="565" y2="744" stroke="#55603C" stroke-width="1" marker-end="url(#arrow-moss)"/>
+
+<!-- Agent 5: Note Quality -->
+<g>
+  <circle cx="420" cy="772" r="14" fill="#55603C"/>
+  <text x="420" y="777" font-size="12" fill="#EFEEE8" text-anchor="middle" font-weight="500">5</text>
+  <rect x="450" y="744" width="230" height="56" rx="4" fill="#F8F7F2" stroke="#8A9270"/>
+  <text x="470" y="768" font-size="14" fill="#23261F" font-weight="500">Note quality agent</text>
+  <text x="470" y="786" font-size="11" fill="#565A4D">Checks + repairs the draft</text>
+</g>
+
+<!-- Profile Builder Agent (feeds Fit agent, off to the side) -->
+<g>
+  <rect x="450" y="850" width="230" height="56" rx="4" fill="#F8F7F2" stroke="#C9A227" stroke-width="1.5"/>
+  <text x="470" y="874" font-size="14" fill="#23261F" font-weight="500">Profile builder agent</text>
+  <text x="470" y="892" font-size="11" fill="#8A6A10">CV paste → keywords, on demand</text>
+</g>
+<path d="M680 878 L727 878 L727 596 L680 596" fill="none" stroke="#C9A227" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arrow-brass)"/>
+
+<!-- Data layer (right side, inside loop container) -->
+<text x="750" y="376" font-size="12" letter-spacing="1.2" fill="#565A4D" font-weight="500">DATA LAYER — PLAIN JSON FILES</text>
+<g>
+  <rect x="750" y="392" width="230" height="52" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="768" y="414" font-size="13" fill="#23261F">config.json</text>
+  <text x="768" y="430" font-size="10.5" fill="#565A4D">your profile + keywords</text>
+</g>
+<g>
+  <rect x="750" y="460" width="230" height="52" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="768" y="482" font-size="13" fill="#23261F">memory.json</text>
+  <text x="768" y="498" font-size="10.5" fill="#565A4D">seen job IDs, capped at 20k</text>
+</g>
+<g>
+  <rect x="750" y="528" width="230" height="52" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="768" y="550" font-size="13" fill="#23261F">matches.json</text>
+  <text x="768" y="566" font-size="10.5" fill="#565A4D">last 500 matches + status</text>
+</g>
+<path d="M750 418 L710 418 L710 420 L680 420" fill="none" stroke="#C9C6B8" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+<path d="M750 486 L720 486 L720 508 L680 508" fill="none" stroke="#C9C6B8" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+<path d="M680 772 L715 772 L715 554 L750 554" fill="none" stroke="#C9C6B8" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+
+<!-- Load test / test suite badge inside container -->
+<g>
+  <rect x="750" y="700" width="230" height="100" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="768" y="724" font-size="12" fill="#565A4D" font-weight="500">VERIFIED, NOT ASSUMED</text>
+  <text x="768" y="746" font-size="12" fill="#23261F">24 / 24 tests passing</text>
+  <text x="768" y="766" font-size="12" fill="#23261F">10,000 jobs / ~400ms</text>
+  <text x="768" y="786" font-size="12" fill="#23261F">Live-fetched, schema-verified</text>
+</g>
+
+<!-- Loop arrow to gate -->
+<path d="M680 772 L740 772 L740 895 L900 895 L900 960" fill="none" stroke="#8A6A10" stroke-width="1.5" marker-end="url(#arrow-brass)"/>
+
+<!-- ===================== HUMAN GATE ===================== -->
+<text x="60" y="990" font-size="12" letter-spacing="1.5" fill="#8A6A10" font-weight="500">02 · THE ONE RULE THAT NEVER BENDS</text>
+<rect x="60" y="1004" width="1320" height="96" rx="6" fill="#F8F7F2" stroke="#C9A227" stroke-width="2"/>
+<text class="serif" x="90" y="1042" font-size="19" font-weight="500" fill="#23261F">Human gatekeeper</text>
+<text x="90" y="1066" font-size="12.5" fill="#565A4D">Every match lands as "pending review." Nothing applies, sends, or spends on its own — approval is always yours.</text>
+<g>
+  <rect x="850" y="1024" width="150" height="30" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="925" y="1044" font-size="11.5" fill="#565A4D" text-anchor="middle">pending_review</text>
+</g>
+<g>
+  <rect x="1020" y="1024" width="130" height="30" rx="4" fill="#EFEEE8" stroke="#55603C"/>
+  <text x="1085" y="1044" font-size="11.5" fill="#3B4A26" text-anchor="middle">approved</text>
+</g>
+<g>
+  <rect x="1170" y="1024" width="130" height="30" rx="4" fill="#EFEEE8" stroke="#A2472C"/>
+  <text x="1235" y="1044" font-size="11.5" fill="#7A331F" text-anchor="middle">dismissed</text>
+</g>
+
+<line x1="900" y1="1100" x2="900" y2="1140" stroke="#565A4D" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- ===================== API / SECURITY LAYER ===================== -->
+<text x="60" y="1170" font-size="12" letter-spacing="1.5" fill="#8A6A10" font-weight="500">03 · EXPRESS API LAYER</text>
+<rect x="60" y="1184" width="1320" height="120" rx="6" fill="#F8F7F2" stroke="#C9C6B8"/>
+<text x="90" y="1214" font-size="14" fill="#23261F" font-weight="500">server.js</text>
+<g>
+  <rect x="90" y="1230" width="220" height="56" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="108" y="1252" font-size="12.5" fill="#23261F">x-api-key auth</text>
+  <text x="108" y="1270" font-size="10.5" fill="#565A4D">timing-safe, opt-in via env</text>
+</g>
+<g>
+  <rect x="330" y="1230" width="220" height="56" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="348" y="1252" font-size="12.5" fill="#23261F">Rate limiter</text>
+  <text x="348" y="1270" font-size="10.5" fill="#565A4D">30 req/min/IP, in-memory</text>
+</g>
+<g>
+  <rect x="570" y="1230" width="220" height="56" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="588" y="1252" font-size="12.5" fill="#23261F">Concurrency lock</text>
+  <text x="588" y="1270" font-size="10.5" fill="#565A4D">prevents overlapping scans</text>
+</g>
+<g>
+  <rect x="810" y="1230" width="220" height="56" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="828" y="1252" font-size="12.5" fill="#23261F">Input validation</text>
+  <text x="828" y="1270" font-size="10.5" fill="#565A4D">config + status endpoints</text>
+</g>
+<g>
+  <rect x="1050" y="1230" width="220" height="56" rx="4" fill="#EFEEE8" stroke="#C9C6B8"/>
+  <text x="1068" y="1252" font-size="12.5" fill="#23261F">Error handling</text>
+  <text x="1068" y="1270" font-size="10.5" fill="#565A4D">no crash on malformed files</text>
+</g>
+
+<line x1="360" y1="1304" x2="360" y2="1340" stroke="#565A4D" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="1080" y1="1304" x2="1080" y2="1340" stroke="#565A4D" stroke-width="1" marker-end="url(#arrow)"/>
+
+<!-- ===================== DELIVERY SURFACES ===================== -->
+<text x="60" y="1374" font-size="12" letter-spacing="1.5" fill="#8A6A10" font-weight="500">04 · DELIVERY SURFACES</text>
+<g>
+  <rect x="60" y="1388" width="620" height="90" rx="6" fill="#F8F7F2" stroke="#C9C6B8"/>
+  <text class="serif" x="90" y="1424" font-size="17" font-weight="500" fill="#23261F">Dashboard — index.html</text>
+  <text x="90" y="1448" font-size="12" fill="#565A4D">Filter tabs, CV-based profile builder, live scan trigger, review queue</text>
+</g>
+<g>
+  <rect x="760" y="1388" width="620" height="90" rx="6" fill="#F8F7F2" stroke="#C9C6B8"/>
+  <text class="serif" x="790" y="1424" font-size="17" font-weight="500" fill="#23261F">Landing page — landing.html</text>
+  <text x="790" y="1448" font-size="12" fill="#565A4D">Shareable overview, radar-sweep signature visual</text>
+</g>
+
+<!-- ===================== INFRA FOOTER ===================== -->
+<line x1="60" y1="1508" x2="1380" y2="1508" stroke="#C9C6B8" stroke-width="1"/>
+<text x="60" y="1544" font-size="12" letter-spacing="1.5" fill="#8A6A10" font-weight="500">05 · FREE INFRASTRUCTURE, END TO END</text>
+
+<g>
+  <rect x="60" y="1560" width="310" height="90" rx="6" fill="#F8F7F2" stroke="#C9C6B8"/>
+  <text x="80" y="1590" font-size="13.5" fill="#23261F" font-weight="500">CI on every push</text>
+  <text x="80" y="1610" font-size="11" fill="#565A4D">.github/workflows/ci.yml</text>
+  <text x="80" y="1628" font-size="11" fill="#565A4D">tests + load test + npm audit</text>
+</g>
+<g>
+  <rect x="390" y="1560" width="310" height="90" rx="6" fill="#F8F7F2" stroke="#C9C6B8"/>
+  <text x="410" y="1590" font-size="13.5" fill="#23261F" font-weight="500">Daily scan, no server</text>
+  <text x="410" y="1610" font-size="11" fill="#565A4D">.github/workflows/daily-scan.yml</text>
+  <text x="410" y="1628" font-size="11" fill="#565A4D">runs free on GitHub's machines</text>
+</g>
+<g>
+  <rect x="720" y="1560" width="310" height="90" rx="6" fill="#F8F7F2" stroke="#C9C6B8"/>
+  <text x="740" y="1590" font-size="13.5" fill="#23261F" font-weight="500">Zero paid dependencies</text>
+  <text x="740" y="1610" font-size="11" fill="#565A4D">no API keys, no database,</text>
+  <text x="740" y="1628" font-size="11" fill="#565A4D">no cloud bill</text>
+</g>
+<g>
+  <rect x="1050" y="1560" width="310" height="90" rx="6" fill="#F8F7F2" stroke="#C9A227" stroke-width="1.5"/>
+  <text x="1070" y="1590" font-size="13.5" fill="#23261F" font-weight="500">Total infra cost</text>
+  <text class="serif" x="1070" y="1622" font-size="26" font-weight="600" fill="#8A6A10">$0.00</text>
+</g>
+
+<text x="60" y="1700" font-size="11" fill="#8A9270">The Watch — built with Claude · loop engineering, honestly scoped</text>
+
+</svg>
