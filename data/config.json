@@ -1,0 +1,33 @@
+{
+  "candidateName": "Your Name",
+  "candidateHeadline": "a product-minded software engineer with 4+ years building web platforms",
+  "candidateHighlight": "I've shipped and scaled production systems end-to-end, and I'm especially drawn to teams that move fast and own outcomes.",
+  "mustHaveKeywords": [
+    "react",
+    "node",
+    "javascript",
+    "typescript",
+    "full stack",
+    "frontend",
+    "backend"
+  ],
+  "niceToHaveKeywords": [
+    "remote",
+    "startup",
+    "series a",
+    "series b"
+  ],
+  "excludeKeywords": [
+    "unpaid",
+    "internship",
+    "senior director",
+    "vp of"
+  ],
+  "remoteOnly": true,
+  "minScore": 3,
+  "greenhouseCompanies": [
+    "stripe",
+    "airbnb",
+    "notion"
+  ]
+}
