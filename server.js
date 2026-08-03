@@ -118,7 +118,12 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api", rateLimit);
-app.use("/api", requireAuth);
+// NOTE: auth is now applied per-route below, not blanket across /api/*.
+// Read-only and "harmless to share" actions (viewing matches/status,
+// triggering a scan, previewing a CV extraction) are public — safe, because
+// they only touch free public job data, not this owner's real profile.
+// Anything that changes the owner's actual profile or review decisions
+// (saving config, approving/dismissing) still requires the API key, always.
 
 app.get("/api/matches", (req, res) => {
   if (!fs.existsSync(MATCHES_PATH)) return res.json([]);
@@ -133,7 +138,7 @@ app.get("/api/status", (req, res) => {
   res.json(loadMemory());
 });
 
-app.get("/api/config", (req, res) => {
+app.get("/api/config", requireAuth, (req, res) => {
   try {
     res.json(loadConfig());
   } catch (err) {
@@ -141,7 +146,7 @@ app.get("/api/config", (req, res) => {
   }
 });
 
-app.post("/api/config", (req, res) => {
+app.post("/api/config", requireAuth, (req, res) => {
   const body = req.body || {};
   const errors = [];
 
@@ -261,7 +266,7 @@ app.post("/api/run-now", async (req, res) => {
 
 // Approve/dismiss a match — this is the human-gatekeeper action.
 const VALID_STATUSES = new Set(["pending_review", "approved", "dismissed"]);
-app.post("/api/matches/:id/status", (req, res) => {
+app.post("/api/matches/:id/status", requireAuth, (req, res) => {
   const { status } = req.body || {};
   if (!VALID_STATUSES.has(status)) {
     return res.status(400).json({ ok: false, error: `status must be one of: ${[...VALID_STATUSES].join(", ")}` });
