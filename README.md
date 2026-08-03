@@ -185,7 +185,7 @@ Lisa is built on a third-party real-time conversational AI platform, wired into 
 | Storage | **Plain JSON files** | No database to host, no ORM, nothing to manage |
 | PDF Parsing | **poppler-utils (`pdftotext`)** | Battle-tested C library beats a fragile pure-JS parser |
 | DOCX Parsing | **mammoth** | Small, focused, no heavy dependency chain |
-| Security | **helmet, custom auth + rate limiter** | Real production headers, timing-safe API key checks |
+| Security | **helmet, tiered auth + rate limiter** | Public viewing/scanning, owner-only writes to profile/review state |
 | Frontend | **Vanilla HTML / CSS / JS** | No framework, no build step, no version drift |
 | Containerization | **Docker** (non-root user, health check) | Deploy anywhere in one command |
 
@@ -256,6 +256,19 @@ Then open **http://localhost:3000**.
 docker build -t dream-job-watcher .
 docker run -p 3000:3000 --env-file .env dream-job-watcher
 ```
+
+## 🔑 Access Model — Public Demo, Owner-Only Control
+
+This app is built for one owner with real data, but a live demo URL that anyone can try. So access is split by **what an action does**, not by who's asking:
+
+| Public — no key needed | Owner-only — requires `API_KEY` |
+|---|---|
+| View matches and scan status | Save profile / keywords to config |
+| Trigger a scan (`Scan now`) | Approve or dismiss a match |
+| Preview CV skill extraction | View the raw saved config (contains your name/profile) |
+| Talk to Lisa | — |
+
+The reasoning: viewing and scanning only touch free, public job-board data — harmless to let anyone try. Saving your profile or changing your real review decisions touches *your* actual data, so that stays locked to whoever holds the `API_KEY`, always.
 
 **Any platform (Render, Fly, Railway, a VPS):** set `API_KEY`, `PORT`, and `NODE_ENV=production`, then run `npm ci --omit=dev` and `node server.js`. See [`Dockerfile`](./Dockerfile) for the exact production configuration, including the built-in `/health` check endpoint used for uptime monitoring.
 
